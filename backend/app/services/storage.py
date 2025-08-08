@@ -1,7 +1,7 @@
 import os, uuid, shutil
 from fastapi import UploadFile
 
-STORAGE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "storage"))
+STORAGE_DIR = os.getenv("STORAGE_DIR", "/storage")
 os.makedirs(STORAGE_DIR, exist_ok=True)
 
 async def save_original(file: UploadFile) -> str:

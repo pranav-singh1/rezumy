@@ -10,6 +10,8 @@ export default function Home() {
   const [jobs, setJobs] = useState<any[]>([])
   const [ranked, setRanked] = useState<any[]>([])
   const [parsed, setParsed] = useState<any | null>(null)
+  const [storagePath, setStoragePath] = useState<string | null>(null)
+  const [actuallySubmit, setActuallySubmit] = useState(false)
 
   async function upload() {
     if (!file) return
@@ -19,6 +21,7 @@ export default function Home() {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
     setParsed(res.data.parsed)
+    setStoragePath(res.data.storage_path)
   }
 
   async function search() {
@@ -30,6 +33,18 @@ export default function Home() {
     const resumeText = Object.entries(parsed || {}).map(([k, v]) => String(v)).join(' ')
     const res = await axios.post(`${BACKEND}/applications/match`, { resume_text: resumeText, jobs })
     setRanked(res.data.ranked)
+  }
+
+  async function apply(job: any) {
+    if (!parsed || !storagePath) return
+    const res = await axios.post(`${BACKEND}/applications/apply`, {
+      apply_url: job.link,
+      resume_json: parsed,
+      storage_path: storagePath,
+      job,
+      actually_submit: actuallySubmit
+    })
+    alert(`Queued apply task: ${res.data.task_id}`)
   }
 
   return (
@@ -47,13 +62,20 @@ export default function Home() {
         <button className="px-3 py-2 border rounded" onClick={search}>Search jobs</button>
       </div>
       {!!jobs.length && <button className="px-3 py-2 border rounded" onClick={match}>Match and rank</button>}
+      <div className="flex items-center gap-2">
+        <input id="submitToggle" type="checkbox" checked={actuallySubmit} onChange={e => setActuallySubmit(e.target.checked)} />
+        <label htmlFor="submitToggle">Actually submit applications</label>
+      </div>
       {!!ranked.length && (
         <div className="space-y-2">
           {ranked.map((j, i) => (
             <div key={i} className="border rounded p-3">
               <div className="font-medium">{j.title} • {j.company} • score {j.score.toFixed(3)}</div>
               <div className="text-sm opacity-80">{j.location || 'Location N/A'}</div>
-              <a className="text-blue-600 underline" href={j.link || '#'} target="_blank">Apply link</a>
+              <div className="flex gap-3 mt-2">
+                <a className="text-blue-600 underline" href={j.link || '#'} target="_blank">Apply link</a>
+                <button className="px-2 py-1 border rounded" onClick={() => apply(j)}>Apply</button>
+              </div>
             </div>
           ))}
         </div>

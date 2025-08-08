@@ -16,19 +16,37 @@ services:
     build: ./backend
     env_file: .env
     depends_on: [db, redis]
+    environment:
+      STORAGE_DIR: /storage
+      REDIS_URL: ${REDIS_URL}
+    volumes:
+      - storage:/storage
     ports:
       - "8000:8000"
   worker:
     build: ./worker
     env_file: .env
-    depends_on: [backend, db, redis]
+    depends_on: [backend, db, redis, playwright-bot]
+    environment:
+      REDIS_URL: ${REDIS_URL}
+      BOT_URL: http://playwright-bot:4000
+    volumes:
+      - storage:/storage
   playwright-bot:
     build: ./playwright-bot
     env_file: .env
     depends_on: [backend]
+    environment:
+      PORT: 4000
+    volumes:
+      - storage:/storage
+    ports:
+      - "4000:4000"
   frontend:
     build: ./frontend
     env_file: .env
     depends_on: [backend]
     ports:
       - "3000:3000"
+volumes:
+  storage: {}

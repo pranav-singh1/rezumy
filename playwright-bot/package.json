@@ -3,13 +3,9 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/bot.js"
+    "start": "node src/server.js"
   },
   "dependencies": {
     "playwright": "^1.45.0"
-  },
-  "devDependencies": {
-    "typescript": "^5.4.0"
   }
 }
